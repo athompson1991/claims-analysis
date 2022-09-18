@@ -6,7 +6,8 @@ import time
 import geopandas as gpd
 import os
 import censusdata as census
-
+import urllib.request
+import sys
 
 from library import Runner
 
@@ -16,20 +17,39 @@ def announcement(text):
     print(breaker)
     print(text)
     print(breaker + "\n")
-    
+
+def setup(download=False):
+    files =  os.listdir()
+    if "plots" in files:
+        for f in os.listdir("plots"):
+            os.remove(f"plots/{f}")
+        os.rmdir("plots")
+    os.mkdir("plots")
+    if "data" not in files:
+        os.mkdir("data")
+    if download:
+        print("Downloading the data.... many rows, will take a while")
+        urllib.request.urlretrieve("https://data.ny.gov/api/views/jshw-gkgu/rows.csv?accessType=DOWNLOAD", "data/full.csv")
+
+def do_sample(n=100000):
+    df = pd.read_csv("data/full.csv")
+    df_sub = df.sample(100000)
+    df_sub.to_csv("data/sub.csv")
 
 if __name__ == "__main__":
     matplotlib.use("Agg")
-
+    args = sys.argv
+    
     start = time.time()
     
-    announcement("Clearing out plots")
-    for f in os.listdir("plots"):
-        os.remove(f"plots/{f}")
+    announcement("Setup")
+    setup(eval(args[3]))
+    if eval(args[2]):
+        do_sample()
 
     announcement("Reading data")
 
-    df = pd.read_csv("data/full.csv")
+    df = pd.read_csv(f"data/{args[1]}")
     runner = Runner(df)
 
     zip_map = gpd.read_file("https://raw.githubusercontent.com/OpenDataDE/State-zip-code-GeoJSON/master/ny_new_york_zip_codes_geo.min.json")
