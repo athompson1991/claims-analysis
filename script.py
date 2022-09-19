@@ -7,9 +7,15 @@ import geopandas as gpd
 import os
 import censusdata as census
 import urllib.request
-import sys
+import argparse
 
 from library import Runner
+
+
+parser = argparse.ArgumentParser(description="Analysis driver")
+parser.add_argument('--file', type=str, required=False, default="full.csv")
+parser.add_argument('--sample', action=argparse.BooleanOptionalAction, default=False)
+parser.add_argument('--download', action=argparse.BooleanOptionalAction, default=False)
 
 
 def announcement(text):
@@ -38,18 +44,18 @@ def do_sample(n=100000):
 
 if __name__ == "__main__":
     matplotlib.use("Agg")
-    args = sys.argv
-    
+    args = parser.parse_args()
+
     start = time.time()
     
     announcement("Setup")
-    setup(eval(args[3]))
-    if eval(args[2]):
+    setup(args.download)
+    if args.sample:
         do_sample()
 
     announcement("Reading data")
 
-    df = pd.read_csv(f"data/{args[1]}")
+    df = pd.read_csv(f"data/{args.file}")
     runner = Runner(df)
 
     zip_map = gpd.read_file("https://raw.githubusercontent.com/OpenDataDE/State-zip-code-GeoJSON/master/ny_new_york_zip_codes_geo.min.json")
